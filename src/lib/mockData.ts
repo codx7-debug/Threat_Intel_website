@@ -1,0 +1,251 @@
+import type {
+  Investigation,
+  ThreatIntelSource,
+  ThreatTrendData,
+  ChatMessage,
+  ThreatNode,
+} from '@/types'
+
+// ─── Threat Intel Sources ─────────────────────────────────────────────────────
+export const mockThreatIntelSources: ThreatIntelSource[] = [
+  { name: 'VirusTotal', enabled: true, lastSync: new Date(Date.now() - 3600000).toISOString(), quota: 500, used: 312 },
+  { name: 'AbuseIPDB', enabled: true, lastSync: new Date(Date.now() - 7200000).toISOString(), quota: 1000, used: 87 },
+  { name: 'AlienVault OTX', enabled: true, lastSync: new Date(Date.now() - 900000).toISOString(), quota: 10000, used: 2345 },
+  { name: 'Shodan', enabled: false, lastSync: undefined, quota: 100, used: 0 },
+  { name: 'MalwareBazaar', enabled: true, lastSync: new Date(Date.now() - 1800000).toISOString(), quota: 9999, used: 512 },
+  { name: 'URLScan.io', enabled: false, lastSync: undefined, quota: 200, used: 0 },
+]
+
+// ─── Trend Data ────────────────────────────────────────────────────────────────
+export const mockTrendData: ThreatTrendData[] = [
+  { date: 'Aug 24', malicious: 12, suspicious: 23, benign: 45 },
+  { date: 'Aug 25', malicious: 19, suspicious: 31, benign: 52 },
+  { date: 'Aug 26', malicious: 8,  suspicious: 18, benign: 61 },
+  { date: 'Aug 27', malicious: 27, suspicious: 44, benign: 38 },
+  { date: 'Aug 28', malicious: 34, suspicious: 29, benign: 57 },
+  { date: 'Aug 29', malicious: 21, suspicious: 37, benign: 49 },
+  { date: 'Aug 30', malicious: 16, suspicious: 52, benign: 63 },
+]
+
+// ─── Investigations ───────────────────────────────────────────────────────────
+export const mockInvestigations: Investigation[] = [
+  {
+    id: 'inv-001',
+    title: 'Emotet Loader — invoice_Q3.exe',
+    artifactType: 'file',
+    artifactValue: 'invoice_Q3.exe',
+    status: 'complete',
+    verdict: 'malicious',
+    confidence: 97,
+    riskScore: 95,
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+    updatedAt: new Date(Date.now() - 5400000).toISOString(),
+    analyst: 'AI Analyst',
+    tags: ['emotet', 'loader', 'banking-trojan', 'phishing'],
+    summary: 'This sample is identified as Emotet, a modular banking trojan and loader. It uses process injection to evade detection, contacts known C2 infrastructure, and drops additional payloads. High confidence based on YARA signatures and behavioral correlation.',
+    mitreTechniques: [
+      { id: 'T1059.001', name: 'PowerShell', tactic: 'Execution', description: 'Uses PowerShell for payload execution', severity: 'high' },
+      { id: 'T1055', name: 'Process Injection', tactic: 'Defense Evasion', description: 'Injects code into svchost.exe', severity: 'critical' },
+      { id: 'T1071.001', name: 'Web Protocols', tactic: 'Command and Control', description: 'C2 via HTTP/HTTPS', severity: 'high' },
+      { id: 'T1486', name: 'Data Encrypted for Impact', tactic: 'Impact', description: 'Drops ransomware payload', severity: 'critical' },
+      { id: 'T1547.001', name: 'Registry Run Keys', tactic: 'Persistence', description: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', severity: 'high' },
+    ],
+    iocs: [
+      { type: 'hash', value: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2', severity: 'critical', description: 'SHA256 of primary payload' },
+      { type: 'ip', value: '185.220.101.47', severity: 'critical', description: 'Primary C2 server', firstSeen: new Date(Date.now() - 86400000).toISOString() },
+      { type: 'domain', value: 'update-service.xyz', severity: 'critical', description: 'C2 domain' },
+      { type: 'url', value: 'http://185.220.101.47/update/bot', severity: 'high', description: 'C2 endpoint' },
+      { type: 'registry', value: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\WindowsUpdate', severity: 'high', description: 'Persistence key' },
+      { type: 'file_path', value: 'C:\\Users\\%USERNAME%\\AppData\\Roaming\\Microsoft\\invoice_Q3.exe', severity: 'medium', description: 'Dropped file path' },
+    ],
+    staticAnalysis: {
+      fileType: 'PE32 executable (GUI) Intel 80386',
+      fileSize: 312832,
+      md5: 'a1b2c3d4e5f6a1b2c3d4',
+      sha1: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+      sha256: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+      entropy: 7.82,
+      imports: ['kernel32.dll', 'ntdll.dll', 'advapi32.dll', 'wininet.dll', 'shell32.dll'],
+      sections: [
+        { name: '.text', virtualSize: 180224, rawSize: 180736, entropy: 6.42, flags: ['EXECUTE', 'READ'] },
+        { name: '.data', virtualSize: 49152, rawSize: 49664, entropy: 4.21, flags: ['READ', 'WRITE'] },
+        { name: '.rsrc', virtualSize: 83456, rawSize: 83968, entropy: 7.92, flags: ['READ'] },
+      ],
+      packers: ['UPX 3.95', 'Custom packer detected'],
+      signatures: ['Emotet.Gen', 'YARA:Emotet_Loader_v4', 'ClamAV:Win.Trojan.Emotet'],
+    },
+    dynamicAnalysis: {
+      sandboxName: 'CuckooSandbox 2.0',
+      duration: 180,
+      behaviorTags: ['process-injection', 'network-c2', 'persistence', 'anti-analysis', 'dropped-payload'],
+      processes: [
+        { pid: 1234, name: 'invoice_Q3.exe', commandLine: 'invoice_Q3.exe', parent: 0, suspicious: true },
+        { pid: 1456, name: 'svchost.exe', commandLine: 'svchost -k netsvcs', parent: 1234, injected: true, suspicious: true },
+        { pid: 1789, name: 'powershell.exe', commandLine: 'powershell.exe -enc JABjAD...', parent: 1456, suspicious: true },
+      ],
+      registryOps: [
+        { type: 'write', key: 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', value: 'WindowsUpdate', data: 'C:\\Users\\user\\AppData\\Roaming\\Microsoft\\invoice_Q3.exe' },
+        { type: 'read', key: 'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion', value: 'ProductName' },
+      ],
+      networkConnections: [
+        { protocol: 'HTTPS', src: '192.168.1.10', dst: '185.220.101.47', dstPort: 443, bytes: 4521, suspicious: true },
+        { protocol: 'DNS', src: '192.168.1.10', dst: '8.8.8.8', dstPort: 53, bytes: 128 },
+      ],
+    },
+    networkAnalysis: {
+      dnsRequests: ['update-service.xyz', 'cdn-delivery.net', 'api.telemetry-hub.com'],
+      httpRequests: [
+        { method: 'POST', url: 'https://185.220.101.47/update/bot', statusCode: 200, userAgent: 'Mozilla/5.0 (compatible)', suspicious: true },
+        { method: 'GET', url: 'https://update-service.xyz/check', statusCode: 302, suspicious: true },
+      ],
+      geoLocations: [
+        { ip: '185.220.101.47', country: 'Russia', countryCode: 'RU', city: 'Moscow', asn: 'AS60117', org: 'Novogara Ltd' },
+      ],
+    },
+    timeline: [
+      { timestamp: new Date(Date.now() - 7200000).toISOString(), type: 'detection', severity: 'critical', description: 'Sample submitted for analysis' },
+      { timestamp: new Date(Date.now() - 7000000).toISOString(), type: 'behavior', severity: 'high', description: 'Anti-debugging checks detected' },
+      { timestamp: new Date(Date.now() - 6900000).toISOString(), type: 'process', severity: 'critical', description: 'Process injection into svchost.exe' },
+      { timestamp: new Date(Date.now() - 6800000).toISOString(), type: 'registry', severity: 'high', description: 'Persistence registry key created' },
+      { timestamp: new Date(Date.now() - 6700000).toISOString(), type: 'network', severity: 'critical', description: 'C2 beacon sent to 185.220.101.47:443' },
+      { timestamp: new Date(Date.now() - 6600000).toISOString(), type: 'file', severity: 'high', description: 'Secondary payload dropped to AppData' },
+    ],
+  },
+  {
+    id: 'inv-002',
+    title: 'Cobalt Strike Beacon — 192.168.1.150',
+    artifactType: 'ip',
+    artifactValue: '192.168.1.150',
+    status: 'complete',
+    verdict: 'malicious',
+    confidence: 91,
+    riskScore: 88,
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    analyst: 'AI Analyst',
+    tags: ['cobalt-strike', 'c2', 'apt', 'beacon'],
+    summary: 'IP flagged as active Cobalt Strike C2 server. Beacon traffic pattern confirmed via JA3 fingerprint matching.',
+    mitreTechniques: [
+      { id: 'T1071.001', name: 'Web Protocols', tactic: 'Command and Control', description: 'HTTPS C2', severity: 'critical' },
+      { id: 'T1573', name: 'Encrypted Channel', tactic: 'Command and Control', description: 'Malleable C2 profile', severity: 'high' },
+    ],
+    iocs: [
+      { type: 'ip', value: '192.168.1.150', severity: 'critical', description: 'Cobalt Strike team server' },
+      { type: 'domain', value: 'cdn-edge-global.net', severity: 'high', description: 'Redirector domain' },
+    ],
+    staticAnalysis: undefined,
+    dynamicAnalysis: undefined,
+    networkAnalysis: {
+      dnsRequests: ['cdn-edge-global.net'],
+      httpRequests: [{ method: 'GET', url: 'https://cdn-edge-global.net/jquery-3.3.1.min.js', statusCode: 200, suspicious: true }],
+      geoLocations: [{ ip: '192.168.1.150', country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam', asn: 'AS13335', org: 'Cloudflare, Inc.' }],
+    },
+    timeline: [],
+  },
+  {
+    id: 'inv-003',
+    title: 'Phishing Domain — secure-paypal-login.net',
+    artifactType: 'domain',
+    artifactValue: 'secure-paypal-login.net',
+    status: 'complete',
+    verdict: 'malicious',
+    confidence: 99,
+    riskScore: 97,
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+    analyst: 'AI Analyst',
+    tags: ['phishing', 'credential-harvesting', 'paypal', 'brand-abuse'],
+    summary: 'Domain impersonating PayPal for credential harvesting. WHOIS shows recent registration (3 days old). SSL cert issued by free CA. Blacklisted by Google Safe Browsing.',
+    mitreTechniques: [
+      { id: 'T1566.002', name: 'Spearphishing Link', tactic: 'Initial Access', description: 'Phishing link in email', severity: 'high' },
+      { id: 'T1056.003', name: 'Web Portal Capture', tactic: 'Collection', description: 'Fake login portal', severity: 'critical' },
+    ],
+    iocs: [
+      { type: 'domain', value: 'secure-paypal-login.net', severity: 'critical', description: 'Primary phishing domain' },
+      { type: 'ip', value: '45.142.212.100', severity: 'high', description: 'Hosting IP' },
+      { type: 'url', value: 'https://secure-paypal-login.net/wallet/verify', severity: 'critical', description: 'Credential capture endpoint' },
+    ],
+    timeline: [],
+  },
+  {
+    id: 'inv-004',
+    title: 'Suspicious Script — macro_enabler.vbs',
+    artifactType: 'script',
+    artifactValue: 'macro_enabler.vbs',
+    status: 'complete',
+    verdict: 'suspicious',
+    confidence: 73,
+    riskScore: 62,
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    analyst: 'AI Analyst',
+    tags: ['vbscript', 'macro', 'dropper', 'obfuscated'],
+    summary: 'Obfuscated VBScript dropper. Uses character code obfuscation and executes encoded PowerShell. No definitive payload identified yet.',
+    mitreTechniques: [
+      { id: 'T1059.005', name: 'Visual Basic', tactic: 'Execution', description: 'VBScript execution', severity: 'medium' },
+      { id: 'T1027', name: 'Obfuscated Files', tactic: 'Defense Evasion', description: 'Chr() obfuscation', severity: 'medium' },
+    ],
+    iocs: [
+      { type: 'hash', value: 'b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3', severity: 'medium', description: 'Script SHA256' },
+    ],
+    timeline: [],
+  },
+  {
+    id: 'inv-005',
+    title: 'Clean URL — docs.microsoft.com',
+    artifactType: 'url',
+    artifactValue: 'https://docs.microsoft.com/en-us/security',
+    status: 'complete',
+    verdict: 'benign',
+    confidence: 99,
+    riskScore: 2,
+    createdAt: new Date(Date.now() - 43200000).toISOString(),
+    analyst: 'AI Analyst',
+    tags: ['microsoft', 'documentation', 'legitimate'],
+    summary: 'Official Microsoft documentation URL. No malicious indicators found.',
+    mitreTechniques: [],
+    iocs: [],
+    timeline: [],
+  },
+  {
+    id: 'inv-006',
+    title: 'Ransomware Hash — LockBit 3.0',
+    artifactType: 'hash',
+    artifactValue: 'c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4',
+    status: 'analyzing',
+    verdict: 'malicious',
+    confidence: 89,
+    riskScore: 98,
+    createdAt: new Date(Date.now() - 1800000).toISOString(),
+    analyst: 'AI Analyst',
+    tags: ['lockbit', 'ransomware', 'encryption', 'apt'],
+    summary: 'Hash matches LockBit 3.0 ransomware family. Currently running deeper correlation analysis.',
+    mitreTechniques: [
+      { id: 'T1486', name: 'Data Encrypted for Impact', tactic: 'Impact', description: 'File encryption routine', severity: 'critical' },
+      { id: 'T1490', name: 'Inhibit System Recovery', tactic: 'Impact', description: 'Deletes shadow copies', severity: 'critical' },
+    ],
+    iocs: [
+      { type: 'hash', value: 'c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4', severity: 'critical', description: 'LockBit 3.0 sample' },
+    ],
+    timeline: [],
+  },
+]
+
+// ─── Threat Nodes ─────────────────────────────────────────────────────────────
+export const mockThreatNodes: ThreatNode[] = [
+  { id: 'n1', type: 'actor', label: 'APT29', position: [0, 0, 0], connections: ['n2', 'n3', 'n5'], severity: 'critical', details: { country: 'Russia', aliases: 'Cozy Bear, Midnight Blizzard' } },
+  { id: 'n2', type: 'malware', label: 'Emotet', position: [4, 2, -1], connections: ['n1', 'n4', 'n6'], severity: 'critical', details: { family: 'Banking Trojan', samples: '1,247' } },
+  { id: 'n3', type: 'malware', label: 'Cobalt Strike', position: [-4, 1, 2], connections: ['n1', 'n7'], severity: 'critical', details: { type: 'C2 Framework', version: '4.x' } },
+  { id: 'n4', type: 'c2', label: 'C2 Server', position: [6, -1, 3], connections: ['n2', 'n8'], severity: 'high', details: { ip: '185.220.101.47', country: 'Russia' } },
+  { id: 'n5', type: 'technique', label: 'Spearphishing', position: [-2, 3, -3], connections: ['n1', 'n9'], severity: 'high', details: { mitre: 'T1566', tactic: 'Initial Access' } },
+  { id: 'n6', type: 'tool', label: 'PowerShell', position: [3, -2, -2], connections: ['n2', 'n3'], severity: 'medium', details: { type: 'Living off the Land', mitre: 'T1059.001' } },
+  { id: 'n7', type: 'c2', label: 'Beacon C2', position: [-5, -2, 1], connections: ['n3'], severity: 'critical', details: { ip: '192.168.1.150', profile: 'jquery' } },
+  { id: 'n8', type: 'victim', label: 'Corp Network', position: [8, 0, 0], connections: ['n4'], severity: 'high', details: { sector: 'Financial', location: 'US' } },
+  { id: 'n9', type: 'victim', label: 'Employee', position: [-1, 4, -4], connections: ['n5'], severity: 'medium', details: { role: 'Finance Dept', status: 'Compromised' } },
+]
+
+// ─── Mock AI Responses ────────────────────────────────────────────────────────
+export const mockAIResponses: Record<string, string> = {
+  default: "I've analyzed the available data. Could you be more specific about what aspect of this investigation you'd like me to focus on?",
+  malicious: "Based on behavioral indicators and YARA signature matches, this sample exhibits **high-confidence malicious behavior**:\n\n- **Process injection** into system processes\n- **C2 beaconing** to known threat infrastructure\n- **Persistence** via registry run keys\n\nRecommend immediate isolation of affected systems and IOC deployment to SIEM.",
+  ioc: "The following IOCs have been extracted and are ready for SIEM deployment:\n\n```\n185.220.101.47  # C2 Server (critical)\nupdate-service.xyz  # C2 Domain\na1b2c3d4e5f6...  # Sample SHA256\n```\n\nAll IOCs have been cross-referenced with VirusTotal and AlienVault OTX with high confidence ratings.",
+  technique: "MITRE ATT&CK mapping complete. Primary tactics observed:\n\n1. **Initial Access** — T1566 Phishing\n2. **Execution** — T1059.001 PowerShell\n3. **Defense Evasion** — T1055 Process Injection\n4. **C&C** — T1071.001 Web Protocols\n\nThis matches the TTPs of **APT29 (Cozy Bear)** with 78% confidence.",
+  summary: "**Executive Summary:**\n\nThis investigation confirms a multi-stage attack chain consistent with targeted financial sector intrusions. The initial vector was a phishing email containing the analyzed sample. Post-execution, the malware established persistence and began C2 communication.\n\n**Recommended Actions:**\n1. Isolate affected endpoint\n2. Reset credentials for affected users\n3. Deploy IOCs to all security controls\n4. Conduct broader threat hunt for lateral movement",
+}
