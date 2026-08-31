@@ -51,11 +51,9 @@ function ConnectionLines({ nodes }: { nodes: ThreatNode[] }) {
       {connections.map(([start, end], i) => {
         const points = [start, end]
         const geometry = new THREE.BufferGeometry().setFromPoints(points)
-        return (
-          <line key={i} geometry={geometry}>
-            <lineBasicMaterial color="#38bdf8" opacity={0.15} transparent linewidth={1} />
-          </line>
-        )
+        const material = new THREE.LineBasicMaterial({ color: '#38bdf8', opacity: 0.15, transparent: true })
+        const lineObj = new THREE.Line(geometry, material)
+        return <primitive key={i} object={lineObj} />
       })}
     </group>
   )

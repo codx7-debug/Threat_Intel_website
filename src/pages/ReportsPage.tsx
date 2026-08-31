@@ -144,7 +144,7 @@ export default function ReportsPage() {
                   onClick={() => handleExport(inv.id)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
                     background: 'rgba(56,189,248,0.08)',
                     border: '1px solid rgba(56,189,248,0.15)' as string,
                     color: '#38bdf8', fontSize: '0.8rem', fontFamily: 'inherit',
