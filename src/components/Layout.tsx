@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const activeCount = investigations.filter(i => i.status === 'analyzing').length
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden' }}>
       {/* Sidebar */}
       <aside
         className={sidebarCollapsed ? 'sidebar collapsed' : 'sidebar'}
