@@ -80,6 +80,17 @@ export default function DashboardPage() {
     { icon: Globe, color: '#f87171', text: 'C2 beacon to 185.220.101.47 blocked', time: '31m ago' },
     { icon: AlertTriangle, color: '#fbbf24', text: 'Phishing URL submitted for analysis', time: '1h ago' },
     { icon: Zap, color: '#38bdf8', text: 'LockBit hash matched in threat feed', time: '2h ago' },
+    { icon: ShieldAlert, color: '#f87171', text: 'Ransomware binary quarantined on host-09', time: '3h ago' },
+    { icon: Globe, color: '#fbbf24', text: 'DNS tunneling detected from 10.0.4.22', time: '4h ago' },
+    { icon: Server, color: '#34d399', text: 'EDR signature update pushed to all agents', time: '5h ago' },
+  ]
+
+  const systemHealth = [
+    { label: 'Threat Intel Feed', status: 'Operational', color: '#34d399' },
+    { label: 'Sandbox Engine', status: 'Operational', color: '#34d399' },
+    { label: 'YARA Scanner', status: 'Degraded', color: '#fbbf24' },
+    { label: 'IOC Enrichment', status: 'Operational', color: '#34d399' },
+    { label: 'MITRE Mapper', status: 'Operational', color: '#34d399' },
   ]
 
   return (
@@ -197,43 +208,81 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Live Feed */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="glass-panel p-5"
-        >
-          <h2 className="text-sm font-semibold text-gray-200 mb-4">Live Threat Feed</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {feed.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + i * 0.07 }}
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10,
-                  padding: '8px 10px', borderRadius: 8,
-                  background: 'rgba(17,28,42,0.6)',
-                  border: '1px solid rgba(56,189,248,0.06)',
-                }}
-              >
-                <div style={{
-                  width: 28, height: 28, borderRadius: 6, flexShrink: 0,
-                  background: `${item.color}15`, display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <item.icon size={14} color={item.color} />
+        {/* Right column: Feed + Health */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Live Feed */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="glass-panel p-5"
+            style={{ flex: 1 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <h2 className="text-sm font-semibold text-gray-200">Live Threat Feed</h2>
+              <span style={{
+                fontSize: '0.65rem', padding: '2px 8px', borderRadius: 99,
+                background: 'rgba(248,113,113,0.1)', color: '#f87171',
+                border: '1px solid rgba(248,113,113,0.2)', fontWeight: 600,
+                animation: 'pulse 2s infinite',
+              }}>● LIVE</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto' }}>
+              {feed.map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 + i * 0.06 }}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                    padding: '8px 10px', borderRadius: 8,
+                    background: 'rgba(17,28,42,0.6)',
+                    border: '1px solid rgba(56,189,248,0.06)',
+                  }}
+                >
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                    background: `${item.color}15`, display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <item.icon size={14} color={item.color} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: 1.4 }}>{item.text}</p>
+                    <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 2 }}>{item.time}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* System Health */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="glass-panel p-5"
+          >
+            <h2 className="text-sm font-semibold text-gray-200" style={{ marginBottom: 14 }}>System Health</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {systemHealth.map((s) => (
+                <div key={s.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{s.label}</p>
+                  <span style={{
+                    fontSize: '0.7rem', fontWeight: 600, color: s.color,
+                    background: `${s.color}15`, padding: '2px 10px',
+                    borderRadius: 99, border: `1px solid ${s.color}30`,
+                    display: 'flex', alignItems: 'center', gap: 5,
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: s.color, display: 'inline-block' }} />
+                    {s.status}
+                  </span>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: 1.4 }}>{item.text}</p>
-                  <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 2 }}>{item.time}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       {/* Bottom row: Recent + Top Techniques */}
